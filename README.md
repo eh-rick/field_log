@@ -2,12 +2,6 @@
 
 A secure, offline-first mobile application designed for field rangers to log, protect, and synchronize wildlife sightings seamlessly—even in remote environments with zero connectivity.
 
----
-
-> **Eco-Protection Architecture:** This system enforces client-side database field isolation to make sure high-value telemetry coordinates and species data remain completely unreadable if a physical device falls into unauthorized hands.
-
----
-
 ##  Core Features
 
 * **Offline-First Data Architecture** – Log sightings locally on-device using a robust, reactive SQLite storage layout.

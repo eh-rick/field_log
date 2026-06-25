@@ -29,7 +29,12 @@ A secure, offline-first mobile application designed for field rangers to log, pr
 
 ---
 
-## 🏗️ Architecture Directory Split
+## Login detail
+    password : password123
+    username: ranger1
+
+
+## Architecture Directory Split
 
 The codebase cleanly separates UI presentation logic from systemic side effects to guarantee safe memory boundaries and straightforward unit testing paths:
 

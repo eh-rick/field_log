@@ -23,24 +23,24 @@ class _LoginScreenState extends State<LoginView> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+Future<void> _handleLogin() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    final success = await _loginController.login(
-      _usernameController.text.trim(),
-      _passwordController.text,
+  final success = await _loginController.login(
+    _usernameController.text.trim(),
+    _passwordController.text,
+  );
+
+  if (!mounted) return;
+
+  if (success) {
+    Navigator.pushReplacementNamed(context, AppRouter.dashboard);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invalid username or password')),
     );
-
-    if (!mounted) return;
-
-    if (success) {
-      Navigator.pushReplacementNamed(context, AppRouter.dashboard);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid username or password')),
-      );
-    }
   }
+}
 
   @override
   Widget build(BuildContext context) {

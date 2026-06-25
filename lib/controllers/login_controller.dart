@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:field_log/controllers/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/export.dart';
 import '../services/database_service.dart';
@@ -36,24 +37,30 @@ class LoginController extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String username, String password) async {
-    
-    _isLoading = true;
-    notifyListeners();
-    await seedDefaultUser();
+Future<bool> login(String username, String password) async {
+  _isLoading = true;
+  notifyListeners();
+  await seedDefaultUser();
 
-    final db = await _dbService.database;
-    final hashedPassword = _hashPassword(password);
+  final db = await _dbService.database;
+  final hashedPassword = _hashPassword(password);
 
-    final List<Map<String, dynamic>> result = await db.query(
-      DatabaseSchema.tableUsers,
-      where: '${DatabaseSchema.colUsername} = ? AND ${DatabaseSchema.colPasswordHash} = ?',
-      whereArgs: [username, hashedPassword],
-    );
+  final List<Map<String, dynamic>> result = await db.query(
+    DatabaseSchema.tableUsers,
+    where: '${DatabaseSchema.colUsername} = ? AND ${DatabaseSchema.colPasswordHash} = ?',
+    whereArgs: [username, hashedPassword],
+  );
 
-    _isLoading = false;
-    notifyListeners();
+  final bool success = result.isNotEmpty;
 
-    return result.isNotEmpty;
+  if (success) {
+    await ProfileController().saveLoginStatus(true);
   }
+
+  _isLoading = false;
+  notifyListeners();
+
+  return success;
+}
+
 }

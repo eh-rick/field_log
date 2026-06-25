@@ -16,6 +16,7 @@ class SplashController {
   Future<void> handleStartupNavigation(BuildContext context) async {
     await _databaseService.database;
     _syncService.initialize();
+    
     final bool isLoggedIn = await _profileController.checkLoginStatus();
 
     if (!context.mounted) return;

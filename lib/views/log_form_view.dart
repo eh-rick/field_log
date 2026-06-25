@@ -50,30 +50,6 @@ class _LogFormViewState extends State<LogFormView> {
   }
 }
 
-  // Future<void> _submitForm() async {
-  //   if (!_formKey.currentState!.validate()) return;
-
-  //   final success = await _controller.saveSighting(
-  //     species: _speciesController.text.trim(),
-  //     count: int.parse(_countController.text.trim()),
-  //     notes: _notesController.text.trim(),
-  //     latitude: -22.5609, 
-  //     longitude: 17.0658,
-  //   );
-
-  //   if (!mounted) return;
-
-  //   if (success) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Sighting logged securely.')),
-  //     );
-  //     Navigator.pop(context);
-  //   } else {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Failed to save sighting configuration.')),
-  //     );
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

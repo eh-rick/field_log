@@ -1,46 +1,39 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:pointycastle/export.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 
 class EncryptionService {
   static final EncryptionService _instance = EncryptionService._internal();
   factory EncryptionService() => _instance;
   EncryptionService._internal();
 
-  Uint8List _getIV() => Uint8List(16);
+  encrypt.Key _deriveKey(String uuid) {
+    final normalized = uuid.replaceAll('-', '').toLowerCase();
+    final padded = normalized.padRight(32, '0').substring(0, 32);
+    return encrypt.Key.fromUtf8(padded);
+  }
+
+  encrypt.IV _getIV() => encrypt.IV(Uint8List(16));
 
   String encryptText(String text, String uuid) {
-    final keyBytes = Uint8List.fromList(utf8.encode(uuid.replaceAll('-', '').substring(0, 32)));
-    final cipher = CBCBlockCipher(AESEngine())
-      ..init(true, ParametersWithIV(KeyParameter(keyBytes), _getIV()));
+    if (text.isEmpty) return '';
+    final key = _deriveKey(uuid);
+    final iv = _getIV();
+    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
     
-    final inputBytes = Uint8List.fromList(utf8.encode(text));
-    final paddedBytes = _pad(inputBytes, 16);
-    return base64.encode(cipher.process(paddedBytes));
+    return encrypter.encrypt(text, iv: iv).base64;
   }
 
   String decryptText(String encryptedText, String uuid) {
-    final keyBytes = Uint8List.fromList(utf8.encode(uuid.replaceAll('-', '').substring(0, 32)));
-    final cipher = CBCBlockCipher(AESEngine())
-      ..init(false, ParametersWithIV(KeyParameter(keyBytes), _getIV()));
-    
-    final inputBytes = base64.decode(encryptedText);
-    final decryptedBytes = cipher.process(Uint8List.fromList(inputBytes));
-    return utf8.decode(_unpad(decryptedBytes));
-  }
-
-  Uint8List _pad(Uint8List src, int blockSize) {
-    final padLength = blockSize - (src.length % blockSize);
-    final out = Uint8List(src.length + padLength);
-    out.setAll(0, src);
-    for (var i = src.length; i < out.length; i++) {
-      out[i] = padLength;
+    if (encryptedText.isEmpty) return '';
+    try {
+      final key = _deriveKey(uuid);
+      final iv = _getIV();
+      final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+      
+      return encrypter.decrypt64(encryptedText, iv: iv);
+    } catch (_) {
+      return encryptedText;
     }
-    return out;
-  }
-
-  Uint8List _unpad(Uint8List src) {
-    final padLength = src.last;
-    return Uint8List.view(src.buffer, 0, src.length - padLength);
   }
 }

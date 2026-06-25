@@ -59,31 +59,4 @@ Future<void> syncPendingSightings() async {
     notifyListeners();
   }
 
-  // Future<void> syncPendingSightings() async {
-  //   if (_isSyncing || !_isOnline) return;
-
-  //   _isSyncing = true;
-  //   notifyListeners();
-
-  //   try {
-  //     final db = await _dbService.database;
-  //     final pending = _sightings.where((s) => s[DatabaseSchema.colSyncStatus] == 'pending').toList();
-
-  //     for (final sighting in pending) {
-  //       await Future.delayed(const Duration(milliseconds: 500));
-
-  //       await db.update(
-  //         DatabaseSchema.tableSightings,
-  //         {DatabaseSchema.colSyncStatus: 'synced'},
-  //         where: '${DatabaseSchema.colUuid} = ?',
-  //         whereArgs: [sighting[DatabaseSchema.colUuid]],
-  //       );
-  //     }
-  //     await loadSightings();
-  //   } catch (_) {
-  //   } finally {
-  //     _isSyncing = false;
-  //     notifyListeners();
-  //   }
-  // }
 }

@@ -1,11 +1,6 @@
 import 'package:field_log/controllers/dashboard_controller.dart';
-import 'package:field_log/controllers/profile_controller.dart';
-import 'package:field_log/services/database_schema.dart';
+import 'package:field_log/data_models/sighting.dart';
 import 'package:flutter/material.dart';
-import '../core/app_router.dart';
-import '../services/database_service.dart';
-import '../services/encryption_service.dart';
-// import 'dashboard_controller.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -15,8 +10,7 @@ class DashboardView extends StatefulWidget {
 }
 
 class _DashboardViewState extends State<DashboardView> {
-  final _controller = DashboardController();
-  final _encryptionService = EncryptionService();
+  final DashboardController _controller = DashboardController();
 
   @override
   void initState() {
@@ -27,7 +21,6 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -41,6 +34,39 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ),
         actions: [
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              if (_controller.isExporting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              return IconButton(
+                icon: const Icon(Icons.ios_share_outlined),
+                tooltip: 'Export & Share CSV',
+                onPressed: _controller.sightings.isEmpty ? null :
+                  () async {
+                    bool share =  await _controller.handleExportAndShare();
+                    if( share ){
+                      if(!mounted) return;
+                      if(!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to generate or share export report.')),
+                      );
+                    }
+
+                  },
+              );
+            },
+          ),
           ListenableBuilder(
             listenable: _controller,
             builder: (context, _) {
@@ -89,7 +115,6 @@ class _DashboardViewState extends State<DashboardView> {
 
           return Column(
             children: [
-              // Pending Sync Banner
               if (_controller.pendingCount > 0)
                 Container(
                   margin: const EdgeInsets.all(16),
@@ -154,24 +179,8 @@ class _DashboardViewState extends State<DashboardView> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         itemCount: _controller.sightings.length,
                         itemBuilder: (context, index) {
-                          final sighting = _controller.sightings[index];
-                          final isSynced = sighting[DatabaseSchema.colSyncStatus] == 'synced';
-                          final sightingUuid = sighting[DatabaseSchema.colUuid] as String? ?? '';
-
-                          // Safe Inline Decryption for Fields
-                          String displaySpecies = sighting[DatabaseSchema.colSpeciesName] as String? ?? 'Unknown';
-                          String displayNotes = sighting[DatabaseSchema.colNotes] as String? ?? '';
-
-                          try {
-                            if (displaySpecies.endsWith('=')) {
-                              displaySpecies = _encryptionService.decryptText(displaySpecies, sightingUuid);
-                            }
-                            if (displayNotes.isNotEmpty && displayNotes.endsWith('=')) {
-                              displayNotes = _encryptionService.decryptText(displayNotes, sightingUuid);
-                            }
-                          } catch (_) {
-                            // Fallback gracefully to raw text if decryption encounters structural errors
-                          }
+                          final SightingModel sighting = _controller.sightings[index];
+                          final isSynced = sighting.syncStatus == 'synced';
 
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
@@ -185,20 +194,17 @@ class _DashboardViewState extends State<DashboardView> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Leading Visual Avatar Placeholder
                                   CircleAvatar(
                                     backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                                     child: Icon(Icons.pets, color: theme.colorScheme.primary, size: 20),
                                   ),
                                   const SizedBox(width: 16),
-                                  
-                                  // Data Columns
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          displaySpecies,
+                                          sighting.speciesName,
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -207,17 +213,17 @@ class _DashboardViewState extends State<DashboardView> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Count: ${sighting[DatabaseSchema.colAnimalCount]}',
+                                          'Count: ${sighting.animalCount}',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey.shade600,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                        if (displayNotes.isNotEmpty) ...[
+                                        if (sighting.notes.isNotEmpty) ...[
                                           const SizedBox(height: 6),
                                           Text(
-                                            displayNotes,
+                                            sighting.notes,
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontStyle: FontStyle.italic,
@@ -231,7 +237,6 @@ class _DashboardViewState extends State<DashboardView> {
                                     ),
                                   ),
                                   
-                                  // Sync Status Badge Action Indicator
                                   Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(

@@ -112,7 +112,6 @@ class _DashboardViewState extends State<DashboardView> {
           if (_controller.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-
           return Column(
             children: [
               if (_controller.pendingCount > 0)
@@ -159,7 +158,6 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                 ),
 
-              // Sightings List Context
               Expanded(
                 child: _controller.sightings.isEmpty
                     ? Center(

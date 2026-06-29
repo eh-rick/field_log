@@ -37,30 +37,31 @@ class LoginController extends ChangeNotifier {
     }
   }
 
-Future<bool> login(String username, String password) async {
-  _isLoading = true;
-  notifyListeners();
-  await seedDefaultUser();
+  Future<bool> login(String username, String password) async {
+    _isLoading = true;
+    notifyListeners();
+    await seedDefaultUser();
 
-  final db = await _dbService.database;
-  final hashedPassword = _hashPassword(password);
+    final db = await _dbService.database;
+    final hashedPassword = _hashPassword(password);
 
-  final List<Map<String, dynamic>> result = await db.query(
-    DatabaseSchema.tableUsers,
-    where: '${DatabaseSchema.colUsername} = ? AND ${DatabaseSchema.colPasswordHash} = ?',
-    whereArgs: [username, hashedPassword],
-  );
+    final List<Map<String, dynamic>> result = await db.query(
+      DatabaseSchema.tableUsers,
+      where: '${DatabaseSchema.colUsername} = ? AND ${DatabaseSchema.colPasswordHash} = ?',
+      whereArgs: [username, hashedPassword],
+    );
 
-  final bool success = result.isNotEmpty;
+    final bool success = result.isNotEmpty;
 
-  if (success) {
-    await ProfileController().saveLoginStatus(true);
+    if (success) {
+      final String userUuid = result.first[DatabaseSchema.colUuid] as String;
+      
+      await ProfileController().saveLoginStatus(isLoggedIn: true, userUuid: userUuid);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return success;
   }
-
-  _isLoading = false;
-  notifyListeners();
-
-  return success;
-}
 
 }

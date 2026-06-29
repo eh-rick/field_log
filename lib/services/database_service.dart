@@ -1,7 +1,6 @@
-// lib/services/database_service.dart
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'database_schema.dart'; // Import your schema layout
+import 'database_schema.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();

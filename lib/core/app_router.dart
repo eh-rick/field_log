@@ -1,4 +1,3 @@
-// lib/core/app_router.dart
 import 'package:field_log/views/log_form_view.dart';
 import 'package:field_log/views/login_view.dart';
 import 'package:field_log/views/splash_view.dart';

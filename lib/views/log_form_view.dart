@@ -10,7 +10,7 @@ class LogFormView extends StatefulWidget {
 }
 
 class _LogFormViewState extends State<LogFormView> {
-  final _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _speciesController = TextEditingController();
   final _countController = TextEditingController();
   final _notesController = TextEditingController();
@@ -25,43 +25,38 @@ class _LogFormViewState extends State<LogFormView> {
   }
 
   Future<void> _submitForm() async {
-  if (!_formKey.currentState!.validate()) return;
-
-  final success = await _controller.saveSighting(
-    species: _speciesController.text.trim(),
-    count: int.parse(_countController.text.trim()),
-    notes: _notesController.text.trim(),
-  );
-
-  if (!mounted) return;
-
-  if (success) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sighting logged securely with accurate GPS status.')),
+    if (!_formKey.currentState!.validate()) return;
+    final bool success = await _controller.saveSighting(
+      species: _speciesController.text.trim(),
+      count: int.parse(_countController.text.trim()),
+      notes: _notesController.text.trim(),
     );
-    Navigator.pop(context);
-  } else {
-    // Show explicit error message if GPS resolution fails or permission was missing
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_controller.locationError.isNotEmpty 
-          ? _controller.locationError 
-          : 'Failed to save sighting configuration.')),
-    );
+    if (!mounted) return;
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sighting logged securely with accurate GPS status.')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_controller.locationError.isNotEmpty 
+              ? _controller.locationError 
+              : 'Failed to save sighting configuration.'),
+        ),
+      );
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Log Sighting')),
+      appBar: AppBar( title: const Text( 'Log Sighting' ) ),
       body: ListenableBuilder(
         listenable: _controller,
-        builder: (context, _) {
-          if (_controller.isSaving) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
+        builder: ( context, _ ) {
           return Form(
             key: _formKey,
             child: ListView(
@@ -69,15 +64,17 @@ class _LogFormViewState extends State<LogFormView> {
               children: [
                 TextFormField(
                   controller: _speciesController,
+                  enabled: !_controller.isSaving,
                   decoration: const InputDecoration(
                     labelText: 'Species Name',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (val) => val == null || val.isEmpty ? 'Required field' : null,
+                  validator: ( val ) => val == null || val.isEmpty ? 'Required field' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _countController,
+                  enabled: !_controller.isSaving,
                   decoration: const InputDecoration(
                     labelText: 'Animal Count',
                     border: OutlineInputBorder(),
@@ -92,6 +89,7 @@ class _LogFormViewState extends State<LogFormView> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _notesController,
+                  enabled: !_controller.isSaving, 
                   decoration: const InputDecoration(
                     labelText: 'Field Notes',
                     border: OutlineInputBorder(),
@@ -116,7 +114,7 @@ class _LogFormViewState extends State<LogFormView> {
                           child: AspectRatio(
                             aspectRatio: 1,
                             child: OutlinedButton(
-                              onPressed: _controller.takePhoto,
+                              onPressed: _controller.isSaving ? null : _controller.takePhoto,
                               style: OutlinedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -127,7 +125,6 @@ class _LogFormViewState extends State<LogFormView> {
                           ),
                         );
                       }
-
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: AspectRatio(
@@ -147,7 +144,7 @@ class _LogFormViewState extends State<LogFormView> {
                                 top: 4,
                                 right: 4,
                                 child: GestureDetector(
-                                  onTap: () => _controller.removePhoto(index),
+                                  onTap: _controller.isSaving ? null : () => _controller.removePhoto(index),
                                   child: Container(
                                     decoration: const BoxDecoration(
                                       color: Colors.black54,
@@ -166,11 +163,20 @@ class _LogFormViewState extends State<LogFormView> {
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _submitForm,
+                  onPressed: _controller.isSaving ? null : _submitForm,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Save Sighting Log'),
+                  child: _controller.isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                          ),
+                        )
+                      : const Text('Save Sighting Log', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

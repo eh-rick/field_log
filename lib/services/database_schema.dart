@@ -23,7 +23,7 @@ class DatabaseSchema {
   static const String colNotes = 'notes';
   static const String colSyncStatus = 'sync_status';
   static const String colCreated = 'created';
-  static const String colLastModified = 'lastModified';
+  static const String colLastModified = 'last_modified';
 
   static const String colSightingId = 'sighting_id';
   static const String colLocalFilePath = 'local_file_path';

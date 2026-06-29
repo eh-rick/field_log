@@ -28,7 +28,6 @@ class LogFormController extends BaseController {
   List<String> get capturedPhotoPaths => _capturedPhotoPaths;
 
 
-
   Future<void> takePhoto() async {
     final path = await _mediaService.captureCompressedPhoto();
     if (path != null) {
